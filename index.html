@@ -36,61 +36,54 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 1.5rem;
         }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
     <script>
-        // Robust process.env shim for ESM modules
-        (function() {
-            window.process = window.process || {};
-            window.process.env = window.process.env || {};
-            window.process.env.NODE_ENV = window.process.env.NODE_ENV || 'production';
-        })();
+        // CRITICAL: Robust process.env shim for ESM modules
+        window.process = { 
+            env: { 
+                NODE_ENV: 'production',
+                API_KEY: '' 
+            } 
+        };
         
-        // Catch global errors and display them on the black screen for debugging
+        // Catch global errors for display
         window.onerror = function(msg, url, lineNo, columnNo, error) {
             const display = document.getElementById('error-display');
             if (display) {
                 display.style.display = 'block';
                 display.innerHTML = '<div style="font-weight: bold; margin-bottom: 10px; font-size: 1.2rem;">⚠️ Application Error</div>' + 
                     '<strong>Message:</strong> ' + msg + 
-                    '<br><strong>Location:</strong> ' + (url || 'unknown source') + 
-                    '<br><strong>Line:</strong> ' + lineNo + ':' + columnNo +
-                    (error && error.stack ? '<br><br><strong>Stack Trace:</strong><br>' + error.stack : '');
+                    '<br><strong>File:</strong> ' + (url ? url.split('/').pop() : 'index') + 
+                    '<br><strong>Line:</strong> ' + lineNo + ':' + columnNo;
             }
             return false;
-        };
-        
-        window.onunhandledrejection = function(event) {
-            console.error('Unhandled rejection:', event.reason);
-            const display = document.getElementById('error-display');
-            if (display) {
-                display.style.display = 'block';
-                display.innerHTML = '<div style="font-weight: bold; margin-bottom: 10px; font-size: 1.2rem;">⚠️ Async Error (Promise Rejection)</div>' + 
-                    '<strong>Reason:</strong> ' + (event.reason ? event.reason.message || event.reason : 'Unknown');
-            }
         };
     </script>
 <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@18.3.1",
+    "react/": "https://esm.sh/react@18.3.1/",
     "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/": "https://esm.sh/react-dom@18.3.1/",
     "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
     "recharts": "https://esm.sh/recharts@2.12.7?external=react,react-dom",
-    "lucide-react": "https://esm.sh/lucide-react@0.344.0?bundle&external=react",
-    "@google/genai": "https://esm.sh/@google/genai@0.21.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0?external=react",
+    "@google/genai": "https://esm.sh/@google/genai@0.21.0"
   }
 }
 </script>
 </head>
 <body>
-    <!-- Diagnostic error overlay -->
     <div id="error-display"></div>
-    
     <div id="root"></div>
-    
-    <!-- Using .tsx directly for the module entry -->
     <script type="module" src="index.tsx"></script>
 </body>
 </html>

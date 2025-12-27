@@ -1,5 +1,4 @@
-
-import { WeatherData, HourlyForecast, DailyForecast } from '../types';
+import { WeatherData, HourlyForecast, DailyForecast } from '../types.ts';
 
 export const getMockWeather = (city: string = 'London'): WeatherData => ({
   city,

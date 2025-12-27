@@ -1,8 +1,6 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { WeatherData, HourlyForecast, DailyForecast, GroundingSource } from "../types.ts";
 
-// Helper to get fresh client
 const getAIClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 export const getAIWeatherInsight = async (weather: WeatherData): Promise<string> => {
@@ -10,11 +8,11 @@ export const getAIWeatherInsight = async (weather: WeatherData): Promise<string>
     const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Provide a short, 2-sentence sophisticated weather insight for ${weather.city}. Current: ${weather.temp}°C, ${weather.description}. Suggest a practical tip.`,
+      contents: `Provide a short, 2-sentence sophisticated weather insight for ${weather.city}, ${weather.country}. Current: ${weather.temp}°C, ${weather.description}. Suggest a practical lifestyle or travel tip based on this.`,
     });
-    return response.text || "Conditions are optimal for outdoor activities.";
+    return response.text || "Weather patterns are steady today.";
   } catch (error) {
-    return "Weather patterns are currently following seasonal norms.";
+    return "Conditions are optimal for typical seasonal activities.";
   }
 };
 
@@ -26,20 +24,17 @@ export const fetchRealTimeWeather = async (city: string): Promise<{
 }> => {
   const ai = getAIClient();
   const prompt = `
-    Find the real-time weather, a full 24-hour hourly forecast (one entry per 2-3 hours), and a 7-day daily forecast for ${city}.
+    Search for the current real-time weather and forecast for the location: "${city}".
     
-    Return the data as a JSON object with this structure:
-    {
-      "weather": {
-        "city": "string", "country": "string", "temp": number, "condition": "string",
-        "description": "string", "humidity": number, "pressure": number, "visibility": number,
-        "feelsLike": number, "uvIndex": number, "windSpeed": number, "windDir": "string",
-        "sunrise": "string", "sunset": "string", "aqi": number, "aqiLabel": "Good|Fair|Moderate|Poor|Very Poor"
-      },
-      "hourly": [ { "time": "10 AM", "temp": number, "icon": "01d", "windSpeed": number } ],
-      "daily": [ { "day": "Monday", "date": "15 May", "temp": number, "icon": "01d", "description": "string" } ]
-    }
-    Use icon codes: 01d (sun), 02d (partly cloudy), 04d (clouds), 09d (rain), 10d (heavy rain), 11d (thunder), 13d (snow), 50d (mist).
+    CRITICAL: If the location "${city}" does not exist, is fictional, or cannot be found, respond ONLY with this JSON:
+    {"error": "Location not found"}
+
+    Otherwise, return a JSON object with:
+    1. "weather": Current conditions (city, country, temp in C, condition, description, humidity, pressure, visibility, feelsLike, uvIndex, windSpeed, windDir, sunrise, sunset, aqi, aqiLabel).
+    2. "hourly": 24-hour forecast (8-10 entries).
+    3. "daily": 7-day forecast.
+
+    Format the response as raw JSON.
   `;
 
   try {
@@ -57,20 +52,21 @@ export const fetchRealTimeWeather = async (city: string): Promise<{
       uri: chunk.web?.uri || '#'
     })).filter((s: any) => s.uri !== '#') || [];
 
-    // Improved regex to handle cases where Gemini wraps JSON in markdown blocks
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error("No JSON found in response:", text);
-      throw new Error("Format mismatch");
-    }
+    if (!jsonMatch) throw new Error("Could not parse weather station data.");
     
     const data = JSON.parse(jsonMatch[0]);
+    
+    if (data.error) {
+      throw new Error(`The location "${city}" could not be found. Please try a different name.`);
+    }
+
     data.weather.date = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
     if (!data.weather.icon) data.weather.icon = '01d';
     
     return { ...data, sources };
-  } catch (e) {
+  } catch (e: any) {
     console.error("Fetch Error:", e);
-    throw new Error(`Unable to reach the weather station for "${city}". Please try another city or check your connection.`);
+    throw new Error(e.message || `Unable to reach the weather station for "${city}".`);
   }
 };
