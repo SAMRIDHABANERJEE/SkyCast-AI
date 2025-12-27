@@ -1,0 +1,7 @@
+{
+  "name": "SkyCast AI Dashboard",
+  "description": "A world-class responsive weather dashboard featuring real-time updates, detailed environmental highlights, and AI-driven weather insights using Gemini.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
