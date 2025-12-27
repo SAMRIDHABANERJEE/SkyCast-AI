@@ -1,6 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { WeatherData, HourlyForecast, DailyForecast, GroundingSource } from "../types";
+import { WeatherData, HourlyForecast, DailyForecast, GroundingSource } from "../types.ts";
 
 // Helper to get fresh client
 const getAIClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
@@ -57,8 +57,12 @@ export const fetchRealTimeWeather = async (city: string): Promise<{
       uri: chunk.web?.uri || '#'
     })).filter((s: any) => s.uri !== '#') || [];
 
+    // Improved regex to handle cases where Gemini wraps JSON in markdown blocks
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Format mismatch");
+    if (!jsonMatch) {
+      console.error("No JSON found in response:", text);
+      throw new Error("Format mismatch");
+    }
     
     const data = JSON.parse(jsonMatch[0]);
     data.weather.date = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });

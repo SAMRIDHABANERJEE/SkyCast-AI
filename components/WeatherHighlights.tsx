@@ -10,7 +10,7 @@ import {
   Sunset,
   Zap
 } from 'lucide-react';
-import { WeatherData } from '../types';
+import { WeatherData } from '../types.ts';
 
 interface HighlightsProps {
   data: WeatherData;

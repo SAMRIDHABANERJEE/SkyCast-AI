@@ -16,12 +16,12 @@ import {
   Wind
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, Area } from 'recharts';
-import { AppState, WeatherData } from './types';
-import { getMockWeather, getMockHourly, getMockDaily } from './services/mockWeather';
-import { getAIWeatherInsight, fetchRealTimeWeather } from './services/geminiService';
-import Sidebar from './components/Sidebar';
-import { WeatherIcon } from './components/WeatherIcons';
-import WeatherHighlights from './components/WeatherHighlights';
+import { AppState, WeatherData } from './types.ts';
+import { getMockWeather, getMockHourly, getMockDaily } from './services/mockWeather.ts';
+import { getAIWeatherInsight, fetchRealTimeWeather } from './services/geminiService.ts';
+import Sidebar from './components/Sidebar.tsx';
+import { WeatherIcon } from './components/WeatherIcons.tsx';
+import WeatherHighlights from './components/WeatherHighlights.tsx';
 
 const FEATURED_CITIES = ['Midnapore', 'Kolkata', 'New York', 'London', 'Tokyo', 'Paris', 'Sydney'];
 
@@ -54,7 +54,7 @@ const App: React.FC = () => {
 
         getAIWeatherInsight(data.weather).then(insight => {
           setState(prev => ({ ...prev, aiInsight: insight }));
-        });
+        }).catch(() => {});
       } else {
         await new Promise(r => setTimeout(r, 800));
         const weather = getMockWeather(location);
@@ -68,6 +68,7 @@ const App: React.FC = () => {
         }));
       }
     } catch (err: any) {
+      console.error("Fetch data error:", err);
       setState(prev => ({ 
         ...prev, 
         loading: false, 
@@ -108,7 +109,7 @@ const App: React.FC = () => {
       <div className="h-screen w-full flex flex-col items-center justify-center bg-[#0B0C10] text-white">
         <Loader2 className="animate-spin text-blue-500 mb-6" size={56} />
         <h1 className="text-2xl font-bold tracking-[0.2em] uppercase mb-2">SkyCast Global</h1>
-        <p className="text-gray-500 text-sm">Synchronizing with global weather satellites...</p>
+        <p className="text-gray-500 text-sm font-medium tracking-wide">Initializing atmospheric feed...</p>
       </div>
     );
   }
@@ -157,12 +158,12 @@ const App: React.FC = () => {
         </header>
 
         {state.error && (
-          <div className="mb-8 p-5 bg-amber-500/5 border border-amber-500/20 text-amber-200 rounded-2xl flex items-center justify-between shadow-xl">
+          <div className="mb-8 p-5 bg-amber-500/5 border border-amber-500/20 text-amber-200 rounded-2xl flex items-center justify-between shadow-xl animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="flex items-center gap-4">
               <div className="bg-amber-500/20 p-2 rounded-lg text-amber-500"><Info size={20} /></div>
               <span className="text-sm font-medium">{state.error}</span>
             </div>
-            <button onClick={() => setState(prev => ({...prev, error: null}))} className="text-xs font-black uppercase p-2">Dismiss</button>
+            <button onClick={() => setState(prev => ({...prev, error: null}))} className="text-xs font-black uppercase p-2 hover:bg-white/5 rounded-lg transition-colors">Dismiss</button>
           </div>
         )}
 
@@ -186,25 +187,25 @@ const App: React.FC = () => {
             {weather && (
               <div className="glass-card p-10 relative overflow-hidden group shadow-2xl border-white/5">
                 <div className="absolute top-0 right-0 -mt-16 -mr-16 w-56 h-56 bg-blue-500/10 rounded-full blur-[80px]"></div>
-                <div className="flex justify-between items-start mb-8">
+                <div className="flex justify-between items-start mb-8 relative z-10">
                   <div>
                     <h2 className="text-4xl font-extrabold text-white tracking-tight">{weather.city}</h2>
                     <p className="text-gray-500 font-bold flex items-center gap-1.5 mt-2 text-sm uppercase tracking-widest">
                       <MapPin size={16} className="text-blue-500" /> {weather.country}
                     </p>
                   </div>
-                  <button onClick={() => fetchData(weather.city, true)} className="p-3 rounded-xl bg-white/5 text-gray-400 hover:text-white">
+                  <button onClick={() => fetchData(weather.city, true)} className="p-3 rounded-xl bg-white/5 text-gray-400 hover:text-white transition-colors">
                     <RefreshCcw size={20} className={state.loading ? 'animate-spin' : ''} />
                   </button>
                 </div>
-                <div className="flex items-center gap-8 mb-10">
+                <div className="flex items-center gap-8 mb-10 relative z-10">
                   <div className="text-8xl font-black text-white tracking-tighter leading-none">{weather.temp}°</div>
                   <div className="flex flex-col items-center gap-1">
                     <WeatherIcon code={weather.icon} size={64} className="drop-shadow-lg" />
                     <span className="text-sm font-black text-blue-400 uppercase tracking-widest">{weather.condition}</span>
                   </div>
                 </div>
-                <div className="flex flex-col gap-6 pt-8 border-t border-white/5">
+                <div className="flex flex-col gap-6 pt-8 border-t border-white/5 relative z-10">
                   <div className="flex items-center gap-4 text-gray-400">
                     <Calendar size={18} />
                     <span className="text-sm font-bold uppercase tracking-wide">{weather.date}</span>
@@ -214,19 +215,19 @@ const App: React.FC = () => {
               </div>
             )}
 
-            <div className="glass-card p-8 border-blue-500/10 bg-gradient-to-br from-[#1E202C] to-[#0B0C10]">
+            <div className="glass-card p-8 border-blue-500/10 bg-gradient-to-br from-[#1E202C] to-[#0B0C10] shadow-xl">
               <div className="flex items-center gap-2 mb-4 text-blue-400 font-black uppercase text-[10px] tracking-[0.3em]">
                 <Sparkles size={14} /> AI Perspective
               </div>
-              <p className="text-gray-200 text-sm leading-relaxed">{aiInsight || "Calibrating..."}</p>
+              <p className="text-gray-200 text-sm leading-relaxed">{aiInsight || "Analyzing atmospheric data streams..."}</p>
             </div>
 
             {sources.length > 0 && (
-              <div className="glass-card p-6 border-white/5">
+              <div className="glass-card p-6 border-white/5 shadow-lg">
                 <h3 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-4">Live Data Sources</h3>
                 <div className="flex flex-col gap-2">
                   {sources.slice(0, 3).map((s, i) => (
-                    <a key={i} href={s.uri} target="_blank" className="text-[11px] flex items-center justify-between bg-white/[0.02] p-2.5 rounded-xl border border-white/5 hover:text-blue-400 transition-all">
+                    <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-[11px] flex items-center justify-between bg-white/[0.02] p-2.5 rounded-xl border border-white/5 hover:text-blue-400 hover:border-blue-500/30 transition-all">
                       <span className="truncate pr-4">{s.title}</span>
                       <ExternalLink size={10} />
                     </a>
@@ -235,11 +236,11 @@ const App: React.FC = () => {
               </div>
             )}
 
-            <div className="glass-card p-8 border-white/5">
+            <div className="glass-card p-8 border-white/5 shadow-xl">
               <h2 className="text-lg font-black text-white uppercase tracking-widest mb-8 border-b border-white/5 pb-4">7-Day Forecast</h2>
               <div className="flex flex-col gap-3">
                 {daily.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/[0.03] transition-all">
+                  <div key={idx} className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/[0.03] transition-all group">
                     <div className="flex items-center gap-5 flex-1">
                       <WeatherIcon code={item.icon} size={24} />
                       <div className="flex flex-col">
@@ -248,7 +249,7 @@ const App: React.FC = () => {
                       </div>
                     </div>
                     <span className="text-white font-black text-lg">{item.temp}°</span>
-                    <ChevronRight size={16} className="text-gray-700" />
+                    <ChevronRight size={16} className="text-gray-700 group-hover:text-blue-500 transition-colors" />
                   </div>
                 ))}
               </div>
@@ -258,7 +259,7 @@ const App: React.FC = () => {
           <div className="lg:col-span-8 flex flex-col gap-10">
             {weather && <WeatherHighlights data={weather} />}
 
-            <div className="glass-card p-10 border-white/5">
+            <div className="glass-card p-10 border-white/5 shadow-2xl">
               <div className="flex items-center justify-between mb-10">
                 <div className="flex flex-col">
                   <h2 className="text-xl font-black text-white uppercase tracking-widest">Thermal Cycle</h2>
@@ -276,17 +277,27 @@ const App: React.FC = () => {
                         <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="time" stroke="#4B5563" fontSize={10} tickLine={false} axisLine={false} dy={10} />
-                    <YAxis hide={true} domain={['dataMin - 5', 'dataMax + 5']} />
-                    <Tooltip contentStyle={{ backgroundColor: '#1A1C23', border: 'none', borderRadius: '12px', fontSize: '12px' }} />
+                    <XAxis 
+                      dataKey="time" 
+                      stroke="#4B5563" 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false} 
+                      dy={10} 
+                    />
+                    <YAxis hide={true} domain={['dataMin - 2', 'dataMax + 2']} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1A1C23', border: '1px solid #374151', borderRadius: '12px', fontSize: '12px', color: '#fff' }} 
+                      itemStyle={{ color: '#3B82F6' }}
+                    />
                     <Area type="monotone" dataKey="temp" stroke="#3B82F6" strokeWidth={4} fillOpacity={1} fill="url(#colorTemp)" />
-                  </LineChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
 
               <div className="flex overflow-x-auto gap-6 mt-10 pb-4 scrollbar-hide">
                 {hourly.map((h, i) => (
-                  <div key={i} className="flex flex-col items-center gap-4 min-w-[80px] p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                  <div key={i} className="flex flex-col items-center gap-4 min-w-[80px] p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all">
                     <span className="text-[10px] font-black text-gray-500 uppercase">{h.time}</span>
                     <WeatherIcon code={h.icon} size={28} />
                     <span className="text-base font-black text-white">{h.temp}°</span>
@@ -299,7 +310,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="glass-card p-8 bg-gradient-to-br from-indigo-500/5 to-transparent border-white/5">
+              <div className="glass-card p-8 bg-gradient-to-br from-indigo-500/5 to-transparent border-white/5 shadow-lg">
                 <h3 className="text-white font-black uppercase text-sm tracking-widest mb-3 flex items-center gap-2">
                   <Droplets size={18} className="text-indigo-400" /> Precipitation Info
                 </h3>
@@ -307,7 +318,7 @@ const App: React.FC = () => {
                   Advanced spectral analysis suggests localized humidity is concentrated in the lower troposphere.
                 </p>
               </div>
-              <div className="glass-card p-8 bg-gradient-to-br from-emerald-500/5 to-transparent border-white/5">
+              <div className="glass-card p-8 bg-gradient-to-br from-emerald-500/5 to-transparent border-white/5 shadow-lg">
                 <h3 className="text-white font-black uppercase text-sm tracking-widest mb-3 flex items-center gap-2">
                   <Wind size={18} className="text-emerald-400" /> Wind Dynamics
                 </h3>
